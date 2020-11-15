@@ -35,3 +35,29 @@ end$$
 delimiter ;
 
 select w.registration_number, get_FIO_workman(w.registration_number) as FIO,w.birth_date,w.gender from workman w;
+
+
+
+
+# 3. Создать функцию, выполняющую арифметическую операцию над полями таблицы,
+# использовать функцию для фильтрации записей в предложении WHERE запроса.
+use factory;
+
+drop function if exists experience_year_workman;
+
+delimiter $$
+create function experience_year_workman(w_id int)
+returns int
+DETERMINISTIC 
+begin 
+	declare experience int default 0;
+    select year(current_date())-year(w.start_date) into experience  from workman w
+    where w.registration_number=w_id;
+    return experience;
+end$$
+delimiter ;
+
+select *  from workman 
+where experience_year_workman(registration_number)=5;
+
+
