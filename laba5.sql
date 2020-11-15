@@ -61,3 +61,49 @@ select *  from workman
 where experience_year_workman(registration_number)=5;
 
 
+
+
+#4. Создать функцию, использующую конструкцию 
+#   CASE (например, для вывода текстового описания справочника по идентификатору),
+#   вывести результат выполнения функции в запросе.
+use factory;
+
+drop function if exists information_about_position ;
+
+delimiter $$
+create function information_about_position(p_id int)
+returns varchar(90)
+DETERMINISTIC 
+begin 
+	declare str varchar(90) default null;
+	case p_id
+    when 1 then
+		set str="Занимает должность President"; 
+	when 2 then
+		set str="Занимает должность Vice President"; 
+	when 3 then
+		set str="Занимает должность Master"; 
+	when 4 then
+		set str="Занимает должность Plant Manager";
+	when 5 then
+		set str="Занимает должность Trainee"; 
+	when 6 then
+		set str="Занимает должность Line worker"; 
+	when 7 then
+		set str="Занимает должность Storekeeper"; 
+	when 8 then
+		set str="Занимает должность Booker";
+	when 9 then
+		set str="Занимает должность Secretary"; 
+	when 10 then
+		set str="Занимает должность Personnel Clerk";
+	else 
+		set str="НЕТ ДОЛЖНОСТИ ";
+	end case;
+    return str;
+end$$
+delimiter ;
+
+select get_FIO_workman(w.registration_number) as FIO , information_about_position(w.id_position) as post from workman w;
+
+
