@@ -1,23 +1,22 @@
-use sakila;
-
 #1. Создать хранимую процедуру, которая возвращает связанные записи нескольких таблиц.
+use sakila;
 drop procedure if exists film_by_category;
 
 delimiter $$
-create procedure film_by_category(in name varchar(25))
+create procedure film_by_category(in arg_name varchar(25))
 comment 'all films with genre'
 begin
-	select f.title , f.description  from film_category fc
+	select f.title ,l.name as language, f.description ,c.name as category from film_category fc
     inner join film f on f.film_id=fc.film_id
-    inner join (select c.category_id  from category c where c.name=name) c
-    on c.category_id=fc.category_id;
+    inner join (select c.category_id ,c.name  from category c where c.name=arg_name) c
+    on c.category_id=fc.category_id
+    inner join language l on l.language_id=f.language_id;
 end$$
 delimiter ;
 
 
 #2 Создать функцию, выполняющую конкатенацию нескольких полей таблицы (например, ФИО),
 #  вывести результат выполнения функции в запросе дополнительно к полям таблиц.
-
 use factory;
 
 drop function if exists get_FIO_workman;
