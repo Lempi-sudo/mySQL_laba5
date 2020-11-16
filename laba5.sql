@@ -105,7 +105,7 @@ delimiter ;
 
 select get_FIO_workman(w.registration_number) as FIO , information_about_position(w.id_position) as post from workman w;
 
-# Создать хранимую процедуру, вычисляющую агрегированные
+#5 Создать хранимую процедуру, вычисляющую агрегированные
 # характеристики записей таблицы (например, минимальное, максимальное и среднее значение некоторых полей)
 # и использующую курсор для построчного обхода строк.
 use bank;
@@ -113,43 +113,33 @@ use bank;
 drop procedure if exists max_spent;
 
 delimiter $$
-CREATE  PROCEDURE max_spent(out arg_id int, out arg_max int)
+CREATE  PROCEDURE max_spent(out arg_max int)
 begin
     declare done int default false;
-	declare tmp, s, c, i, id int default 0;
-    DECLARE cur1 CURSOR FOR SELECT p.start_money ,p.current_money ,p.person_id FROM person p;
+	declare tmp, s, c int default 0;
+    DECLARE cur1 CURSOR FOR SELECT p.start_money ,p.current_money FROM person p;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
     OPEN cur1;
     while not done do
-		FETCH cur1 INTO s, c, i;
+		FETCH cur1 INTO s, c;
 		if (s-c)>tmp then
 			set tmp=s-c;
-            set id=i;
 		end if;
 	end while;
     close cur1;
     select  tmp into arg_max;
-    select id into arg_id;
 end$$
 delimiter ;
 
 set @max=0;
-set @id=0;
-call max_spent(@id,@max);
-select @id,@max; 
-
-
-
-
+call max_spent(@max);
+select @max; 
 
 
 
 
 #6. Создать хранимую процедуру,
 #    выполняющую задание из п.5 без использования курсора.
-
-
-
 use bank;
 drop procedure if exists max_spent2;
 
@@ -160,3 +150,43 @@ begin
     from (select (p.start_money-p.current_money) as spend from person p) t;
 end$$
 delimiter ;
+
+
+
+ #7. Создать две хранимых процедуры. Обе процедуры должны возвращать строки одной из таблиц по условию,
+ #которое указывается в качестве параметра процедуры. Первая процедура должна быть реализована
+ #без использования подготовленных запросоа, соответственно вторая – с использованием. 
+#Для каждой из процедур выполнить запросы, демонстрирующие стандартное поведение и реализующие SQL инъекцию.
+
+use world;
+
+drop procedure if exists contry1 ;
+
+delimiter //
+CREATE PROCEDURE contry1(IN _name varchar(45))
+BEGIN
+SET @str = concat("SELECT * FROM country c WHERE c.Name = ", _name, ";");
+PREPARE stmt FROM @str;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+END; //
+delimiter ;
+
+drop procedure if exists contry2 ;
+
+delimiter //
+CREATE PROCEDURE contry2(IN _name varchar(45))
+BEGIN
+PREPARE stmt FROM "SELECT * FROM country c WHERE c.Name = ?";
+SET @str = _name;
+EXECUTE stmt USING @str;
+DEALLOCATE PREPARE stmt;
+END; //
+delimiter ;
+
+
+CALL contry1("'Afghanistan'");
+CALL contry1("'Afghanistan' or '' = ''");
+
+CALL contry2("Afghanistan");
+CALL contry2("'Afghanistan' or '' = ''");
