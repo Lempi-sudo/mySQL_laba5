@@ -105,4 +105,58 @@ delimiter ;
 
 select get_FIO_workman(w.registration_number) as FIO , information_about_position(w.id_position) as post from workman w;
 
+# Создать хранимую процедуру, вычисляющую агрегированные
+# характеристики записей таблицы (например, минимальное, максимальное и среднее значение некоторых полей)
+# и использующую курсор для построчного обхода строк.
+use bank;
 
+drop procedure if exists max_spent;
+
+delimiter $$
+CREATE  PROCEDURE max_spent(out arg_id int, out arg_max int)
+begin
+    declare done int default false;
+	declare tmp, s, c, i, id int default 0;
+    DECLARE cur1 CURSOR FOR SELECT p.start_money ,p.current_money ,p.person_id FROM person p;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    OPEN cur1;
+    while not done do
+		FETCH cur1 INTO s, c, i;
+		if (s-c)>tmp then
+			set tmp=s-c;
+            set id=i;
+		end if;
+	end while;
+    close cur1;
+    select  tmp into arg_max;
+    select id into arg_id;
+end$$
+delimiter ;
+
+set @max=0;
+set @id=0;
+call max_spent(@id,@max);
+select @id,@max; 
+
+
+
+
+
+
+
+
+#6. Создать хранимую процедуру,
+#    выполняющую задание из п.5 без использования курсора.
+
+
+
+use bank;
+drop procedure if exists max_spent2;
+
+delimiter $$
+create procedure max_spent2()
+begin
+	select  max(t.spend) as max_spent 
+    from (select (p.start_money-p.current_money) as spend from person p) t;
+end$$
+delimiter ;
