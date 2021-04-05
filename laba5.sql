@@ -160,18 +160,6 @@ delimiter ;
 
 use world;
 
-drop procedure if exists contry1 ;
-
-delimiter //
-CREATE PROCEDURE contry1(IN _name varchar(45))
-BEGIN
-SET @str = concat("SELECT * FROM country c WHERE c.Name = ", _name, ";");
-PREPARE stmt FROM @str;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-END; //
-delimiter ;
-
 drop procedure if exists contry2 ;
 
 delimiter //
@@ -185,8 +173,24 @@ END; //
 delimiter ;
 
 
-CALL contry1("'Afghanistan'");
-CALL contry1("'Afghanistan' or '' = ''");
 
-CALL contry2("Afghanistan");
-CALL contry2("'Afghanistan' or '' = ''");
+drop procedure if exists contry1 ;
+
+delimiter //
+CREATE PROCEDURE contry1(IN _name varchar(45))
+BEGIN
+SET @str = concat("SELECT * FROM country c WHERE c.Name = ", _name, ";");
+PREPARE stmt FROM @str;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+END; //
+delimiter ;
+
+
+
+
+CALL contry1("'Afghanistan'");#1 str
+CALL contry1("'Afghanistan' or '1' = '1'");#all
+
+CALL contry2("Afghanistan");#1 str
+CALL contry2("'Afghanistan' or '1' = '1'"); # zero str
